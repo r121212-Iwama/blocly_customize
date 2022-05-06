@@ -421,3 +421,12 @@ Blockly.Msg["TEXTS_HUE"] = "160";
 Blockly.Msg["PROCEDURES_HUE"] = "290";
 Blockly.Msg["COLOUR_HUE"] = "20";
 Blockly.Msg["VARIABLES_DYNAMIC_HUE"] = "310";
+
+Blockly.Msg["CATLOGIC"] = "論理";
+Blockly.Msg["CATLOOPS"] = "繰り返し";
+Blockly.Msg["CATMATH"] = "数学";
+Blockly.Msg["CATTEXT"] = "テキスト";
+Blockly.Msg["CATLISTS"] = "リスト";
+Blockly.Msg["CATCOLOUR"] = "色";
+Blockly.Msg["CATVARIABLES"] = "変数";
+Blockly.Msg["CATFUNCTIONS"] = "関数";
