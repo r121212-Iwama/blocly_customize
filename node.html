@@ -9,7 +9,7 @@
     <script src="blocks_compressed.js"></script>
     <script src="javascript_compressed.js"></script>
     <script src="ja.js"></script>
-    <!-- <script src="/socket.io/socket.io.js"></script> -->
+    <script src="/socket.io/socket.io.js"></script>
     <title>Blockly Sample</title>
 
     <!-- <link rel="stylesheet" href="style.css"> -->
@@ -341,7 +341,7 @@
           <category name="%{BKY_CATFUNCTIONS}" colour="%{BKY_PROCEDURES_HUE}" custom="PROCEDURE"></category>
     </xml>
 
-    <!-- <button id="showCode">JavaScriptを表示する</button> -->
+    <button id="showCode">JavaScriptを表示する</button>
     <button id="runCode">JavaScriptを実行する</button>
     <pre id='jsCode'></pre>
     <!-- <pre id='xmlCode'></pre> -->
@@ -352,7 +352,7 @@
         //-------------------------------------
         // Socket.ioサーバへ接続
         //-------------------------------------
-        // const socket = io();
+        const socket = io();
 
         var primaryWorkspace = Blockly.inject('primaryDiv',  // ライブラリに読み込ませる
             {
@@ -394,7 +394,7 @@
                 var xml = Blockly.Xml.workspaceToDom(primaryWorkspace);
                 var myBlockXml = Blockly.Xml.domToText(xml);
                 console.log(myBlockXml);
-                // socket.emit("workspace", myBlockXml);
+                socket.emit("workspace", myBlockXml);
                 }
             }
             else if (event.type == "delete") {
@@ -402,18 +402,18 @@
                 var xml = Blockly.Xml.workspaceToDom(primaryWorkspace);
                 var myBlockXml = Blockly.Xml.domToText(xml);
                 console.log(myBlockXml);
-                // socket.emit("workspace", myBlockXml);
+                socket.emit("workspace", myBlockXml);
             }
         }
 
-        // socket.on("workspace-post", (myBlockXml)=>{
-        //     if(myBlockXml == "") return;
-        //     var xml = Blockly.Xml.textToDom(myBlockXml);
-        //     xmlWorkspace.clear();
-        //     Blockly.Xml.domToWorkspace(xml, xmlWorkspace);
-        //     primaryWorkspace.clear();
-        //     Blockly.Xml.domToWorkspace(xml, primaryWorkspace);
-        // });
+        socket.on("workspace-post", (myBlockXml)=>{
+            if(myBlockXml == "") return;
+            var xml = Blockly.Xml.textToDom(myBlockXml);
+            xmlWorkspace.clear();
+            Blockly.Xml.domToWorkspace(xml, xmlWorkspace);
+            primaryWorkspace.clear();
+            Blockly.Xml.domToWorkspace(xml, primaryWorkspace);
+        });
 
         function showCode() {
             Blockly.JavaScript.INFINITE_LOOP_TRAP = null;
