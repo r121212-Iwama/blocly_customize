@@ -5,29 +5,59 @@
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
 
     <!-- ライブラリを読み込む -->
+    <script src="acorn_interpreter.js"></script>
     <script src="blockly_compressed.js"></script>
     <script src="blocks_compressed.js"></script>
     <script src="javascript_compressed.js"></script>
     <script src="ja.js"></script>
+
+    <script src="wait_block.js"></script>
+
     <script src="/socket.io/socket.io.js"></script>
+
     <title>Blockly Sample</title>
 
     <!-- <link rel="stylesheet" href="style.css"> -->
 </head>
 
 <body>
-    <!-- ワークスペースを用意 -->
-    <table width="100%">
-        <tr>
-        <td style="background-color: aqua;">
-            <div id="primaryDiv" style="height: 480px; width: 600px;"></div>
-        </td>
-        <td>
-            <div id="xmlDiv" style="height: 480px; width: 600px;"></div>
-        </td>
-        </tr>
-    </table>
+    <!-- <div class="area">
+        <input type="radio" name="tab_name" id="tab1" checked>
+        <label class="tab_class" for="tab1">タブ1</label>
+        <div class="content_class">
+          <p>タブ1のコンテンツを表示します</p>
+        </div>
+        <input type="radio" name="tab_name" id="tab2" >
+        <label class="tab_class" for="tab2">タブ2</label>
+        <div class="content_class">
+          <p>タブ2のコンテンツを表示します</p>
+        </div>
+        <input type="radio" name="tab_name" id="tab3" >
+        <label class="tab_class" for="tab3">タブ3</label>
+        <div class="content_class">
+          <p>タブ3のコンテンツを表示します</p>
+        </div>
+        <input type="radio" name="tab_name" id="tab4" >
+        <label class="tab_class" for="tab4">タブ4</label>
+        <div class="content_class">
+          <p>タブ4のコンテンツを表示します</p>
+        </div>
+        <input type="radio" name="tab_name" id="tab5" >
+        <label class="tab_class" for="tab5">タブ5</label>
+        <div class="content_class">
+          <p>タブ5のコンテンツを表示します</p>
+        </div>
+    </div> -->
+    <i class="fas fa-play fa-xs"></i>
 
+    <!-- ワークスペースを用意 -->
+    <div style="width: 100%">
+      <div id="primaryDiv"
+          style="display: inline-block; height: 480px; width: 58%"></div>
+      <textarea id="output" disabled="disabled"
+          style="display: inline-block; height: 480px; width: 38%;">
+      </textarea>
+    </div>
 
     <xml id="toolbox" style="display: none"> 
         <!-- ブロックサンプルを用意 -->
@@ -41,6 +71,9 @@
             <block type="logic_ternary"></block>
           </category>
           <category name="%{BKY_CATLOOPS}" colour="%{BKY_LOOPS_HUE}">
+            <block type="wait_seconds" id="wait">
+              <field name="SECONDS">1.0</field>
+            </block>
             <block type="controls_repeat_ext">
               <value name="TIMES">
                 <shadow type="math_number">
@@ -341,102 +374,184 @@
           <category name="%{BKY_CATFUNCTIONS}" colour="%{BKY_PROCEDURES_HUE}" custom="PROCEDURE"></category>
     </xml>
 
-    <button id="showCode">JavaScriptを表示する</button>
-    <button id="runCode">JavaScriptを実行する</button>
+    <xml xmlns="https://developers.google.com/blockly/xml" id="startBlocks" style="display: none">
+      <block type="variables_set" id="set_n_initial" inline="true" x="20" y="20">
+        <field name="VAR">n</field>
+        <value name="VALUE">
+          <block type="math_number">
+            <field name="NUM">1</field>
+          </block>
+        </value>
+        <next>
+          <block type="controls_repeat_ext" id="repeat" inline="true">
+            <value name="TIMES">
+              <block type="math_number">
+                <field name="NUM">4</field>
+              </block>
+            </value>
+            <statement name="DO">
+              <block type="wait_seconds" id="wait">
+                <field name="SECONDS">1.0</field>
+                <next>
+                  <block type="variables_set" id="set_n_update" inline="true">
+                    <field name="VAR">n</field>
+                    <value name="VALUE">
+                      <block type="math_arithmetic" inline="true">
+                        <field name="OP">MULTIPLY</field>
+                        <value name="A">
+                          <block type="variables_get">
+                            <field name="VAR">n</field>
+                          </block>
+                        </value>
+                        <value name="B">
+                          <block type="math_number">
+                            <field name="NUM">2</field>
+                          </block>
+                        </value>
+                      </block>
+                    </value>
+                    <next>
+                      <block type="text_print" id="print" inline="false">
+                        <value name="TEXT">
+                          <block type="variables_get">
+                            <field name="VAR">n</field>
+                          </block>
+                        </value>
+                      </block>
+                    </next>
+                  </block>
+                </next>
+              </block>
+            </statement>
+          </block>
+        </next>
+      </block>
+    </xml>
+
+    <p>
+      <button onclick="runCode()" id="runButton">Run JavaScript</button>
+    </p>
     <pre id='jsCode'></pre>
     <!-- <pre id='xmlCode'></pre> -->
 
     <script>
         
         
-        //-------------------------------------
-        // Socket.ioサーバへ接続
-        //-------------------------------------
-        const socket = io();
+      //-------------------------------------
+      // Socket.ioサーバへ接続
+      //-------------------------------------
+      const socket = io();
 
-        var primaryWorkspace = Blockly.inject('primaryDiv',  // ライブラリに読み込ませる
-            {
-                toolbox: document.getElementById('toolbox'),
-                // maxBlocks: 3,
-                grid: {
-                spacing: 18,
-                length: 3,
-                colour: '#ccc',
-                snap: true,
-                },
-                trashcan: true,
-                zoom: {
-                controls: true,
-                wheel: true,
-                startScale: 1.0,
-                maxScale: 3,
-                minScale: 0.3,
-                scaleSpeed: 1.2,
-                },
-            }
-        );
-        var xmlWorkspace = Blockly.inject('xmlDiv',
-            {
-            readOnly: true
-            }
-        );
-        // Listen to events on primary workspace.
-        primaryWorkspace.addChangeListener(onFirstComment);
-        var cnt = 0;
+      var primaryWorkspace = Blockly.inject('primaryDiv',  // ライブラリに読み込ませる
+          {
+              toolbox: document.getElementById('toolbox'),
+              // maxBlocks: 3,
+              grid: {
+              spacing: 18,
+              length: 3,
+              colour: '#ccc',
+              snap: true,
+              },
+              trashcan: true,
+              zoom: {
+              controls: true,
+              wheel: true,
+              startScale: 1.0,
+              maxScale: 3,
+              minScale: 0.3,
+              scaleSpeed: 1.2,
+              },
+          }
+      );
+      // Blockly.Xml.domToWorkspace(document.getElementById('startBlocks'),primaryWorkspace);
+      
+      // Exit is used to signal the end of a script.
+      Blockly.JavaScript.addReservedWords('exit');
 
-        function onFirstComment(event) {
-            showCode();
-            console.log(event.type);
-            if (event.type == "move") {
-                cnt++;
-                console.log(cnt);
-                if(cnt%2 == 0){
-                var xml = Blockly.Xml.workspaceToDom(primaryWorkspace);
-                var myBlockXml = Blockly.Xml.domToText(xml);
-                console.log(myBlockXml);
-                socket.emit("workspace", myBlockXml);
-                }
-            }
-            else if (event.type == "delete") {
-                // console.log(event.type);
-                var xml = Blockly.Xml.workspaceToDom(primaryWorkspace);
-                var myBlockXml = Blockly.Xml.domToText(xml);
-                console.log(myBlockXml);
-                socket.emit("workspace", myBlockXml);
-            }
+      var outputArea = document.getElementById('output');
+      const stprcomm = 'Program output:\n=================';
+      const enprcomm = '\n<< Program complete >>';
+      outputArea.value = stprcomm;
+
+      var runButton = document.getElementById('runButton');
+      var myInterpreter = null;
+      var runner;
+      var cnt = 0;
+      
+      function onFirstComment(event) {
+          showCode();
+          console.log(event.type);
+          resetInterpreter();
+          if (event.type == "move") {
+              cnt++;
+              // console.log(cnt);
+              if(cnt%2 == 0){
+              var xml = Blockly.Xml.workspaceToDom(primaryWorkspace);
+              var myBlockXml = Blockly.Xml.domToText(xml);
+              // console.log(myBlockXml);
+              socket.emit("workspace", myBlockXml);
+              }
+          }
+          else if (event.type == "delete") {
+              // console.log(event.type);
+              var xml = Blockly.Xml.workspaceToDom(primaryWorkspace);
+              var myBlockXml = Blockly.Xml.domToText(xml);
+              // console.log(myBlockXml);
+              socket.emit("workspace", myBlockXml);
+          }
+      }
+
+      socket.on("workspace-post", (myBlockXml)=>{
+          if(myBlockXml == "") return;
+          var xml = Blockly.Xml.textToDom(myBlockXml);
+          primaryWorkspace.clear();
+          Blockly.Xml.domToWorkspace(xml, primaryWorkspace);
+      });
+
+      function showCode() {
+          Blockly.JavaScript.INFINITE_LOOP_TRAP = null;
+          const pre_js = document.getElementById('jsCode');
+          // const pre_xml = document.getElementById('xmlCode');
+          pre_js.innerHTML = Blockly.JavaScript.workspaceToCode(primaryWorkspace);
+          
+          // pre_xml.innerHTML = xml;
+      }
+
+      //初期化関数
+      var initFunc = function(interpreter, scope) {
+          var wrapper = function(text) {
+            text = text ? text.toString() : '';
+            outputArea.value = outputArea.value + '\n' + text;
+          };
+          interpreter.setProperty(scope, 'alert', interpreter.createNativeFunction(wrapper));     
+      };
+
+      function resetInterpreter() {
+        myInterpreter = null;
+        if (runner) {
+          clearTimeout(runner);
+          outputArea.value += '\nワークスペースに何らかの操作があったため実行を中断しました。';
+          runner = null;
         }
+      }
 
-        socket.on("workspace-post", (myBlockXml)=>{
-            if(myBlockXml == "") return;
-            var xml = Blockly.Xml.textToDom(myBlockXml);
-            xmlWorkspace.clear();
-            Blockly.Xml.domToWorkspace(xml, xmlWorkspace);
-            primaryWorkspace.clear();
-            Blockly.Xml.domToWorkspace(xml, primaryWorkspace);
-        });
+      
+      function runCode() {
+        outputArea.value = stprcomm;
+        const code = Blockly.JavaScript.workspaceToCode(primaryWorkspace);
+        myInterpreter = new Interpreter(code, initFunc);
+        runner = setTimeout(() => {
+          myInterpreter.run();
+          outputArea.value = outputArea.value + '\n' + enprcomm;
+        }, 500);
+      }
 
-        function showCode() {
-            Blockly.JavaScript.INFINITE_LOOP_TRAP = null;
-            const pre_js = document.getElementById('jsCode');
-            // const pre_xml = document.getElementById('xmlCode');
-            pre_js.innerHTML = Blockly.JavaScript.workspaceToCode(primaryWorkspace);
-            
-            // pre_xml.innerHTML = xml;
-        }
+      // Listen to events on primary workspace.
+      // Load the interpreter now, and upon future changes.
+      primaryWorkspace.addChangeListener(
+        onFirstComment
+      );
 
-        function runCode() {
-            let maxSteps = 10000;
-            const code = Blockly.JavaScript.workspaceToCode(primaryWorkspace);
-
-            try {
-                eval(code);
-            } catch(e) {
-                alert(e);
-            }
-        }
-
-        // document.getElementById('showCode').addEventListener('click', showCode, false);
-        document.getElementById('runCode').addEventListener('click', runCode, false);
     </script>
 </body>
 </html>

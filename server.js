@@ -10,6 +10,7 @@ const io   = require("socket.io")(http);
 var worksapceBlock = "";
 
 app.use(express.static(__dirname + '/public/js'));
+app.use(express.static(__dirname + '/public/css'));
 /**
  * "/"にアクセスがあったらindex.htmlを返却
 */
