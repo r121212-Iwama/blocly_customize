@@ -481,7 +481,7 @@
       function onFirstComment(event) {
           showCode();
           console.log(event.type);
-          resetInterpreter();
+          // resetInterpreter();
           if (event.type == "move") {
               cnt++;
               // console.log(cnt);
@@ -492,7 +492,7 @@
               socket.emit("workspace", myBlockXml);
               }
           }
-          else if (event.type == "delete") {
+          else if (event.type == "delete" ) {
               // console.log(event.type);
               var xml = Blockly.Xml.workspaceToDom(primaryWorkspace);
               var myBlockXml = Blockly.Xml.domToText(xml);
