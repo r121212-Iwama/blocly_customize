@@ -481,7 +481,7 @@
       function onFirstComment(event) {
           showCode();
           console.log(event.type);
-          // resetInterpreter();
+          resetInterpreter();
           if (event.type == "move") {
               cnt++;
               // console.log(cnt);
@@ -543,7 +543,7 @@
         runner = setTimeout(() => {
           myInterpreter.run();
           outputArea.value = outputArea.value + '\n' + enprcomm;
-        }, 500);
+        }, 5000);
       }
 
       // Listen to events on primary workspace.
